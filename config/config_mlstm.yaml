@@ -6,7 +6,7 @@ scheduling:
   batch_size: 64
   valid_batch_size: 64
   epoch: 50
-  enable_cuda: True  # disable this when running on machine without cuda
+  enable_cuda: False  # disable this when running on machine without cuda
   cuda_seed: 42
   
 optimizer:
@@ -19,7 +19,7 @@ optimizer:
   clip_grad_norm: 5
 
 global:
-  fast_rnns: False
+  fast_rnns: True
   dropout_between_rnn_layers: 0.3
   dropout_between_rnn_hiddens: 0.3
   dropout_in_rnn_weights: 0.2
