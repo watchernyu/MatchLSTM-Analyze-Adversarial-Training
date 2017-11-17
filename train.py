@@ -34,13 +34,18 @@ def the_main_function(config_dir='config', update_dict=None):
     VALID_SIZE = _n
     TEST_SIZE = _n
 
+    # read configurations from config file
     config_file = os.path.join(config_dir, cfname)
     with open(config_file) as reader:
         model_config = yaml.safe_load(reader)
+
+    # get data set from h5 file?
+    # the dataset is basically all the things about squad data
     dataset = SquadDataset(dataset_h5=model_config['dataset']['h5'],
                            data_path='tokenized_squad_v1.1.2/',
                            ignore_case=True)
 
+    # divide data into 3 parts (TODO is there random shuffle?)
     train_data, valid_data, test_data = dataset.get_data(train_size=TRAIN_SIZE, valid_size=VALID_SIZE, test_size=TEST_SIZE)
     print_shape_info(train_data)
     if False:
@@ -56,14 +61,17 @@ def the_main_function(config_dir='config', update_dict=None):
         else:
             torch.cuda.manual_seed(model_config['scheduling']['cuda_seed'])
 
+    # init model
     _model = MatchLSTMModel(model_config=model_config, data_specs=dataset.meta_data)
     if model_config['scheduling']['enable_cuda']:
         _model.cuda()
 
+    # TODO what is NLL?
     criterion = StandardNLL()
     if model_config['scheduling']['enable_cuda']:
         criterion = criterion.cuda()
 
+    # print out a summarization of the model
     logger.info('finished loading models')
     logger.info(torch_model_summarize(_model))
 
@@ -89,6 +97,7 @@ def the_main_function(config_dir='config', update_dict=None):
     for i, ch in enumerate(char_vocab):
         char_word2id[ch] = i
 
+    # the generator uses yield to give batches of data, similar to what taught in class
     train_batch_generator = random_generator(data_dict=train_data, batch_size=batch_size,
                                              input_keys=input_keys, output_keys=output_keys,
                                              trim_function=squad_trim, sort_by='input_story',
