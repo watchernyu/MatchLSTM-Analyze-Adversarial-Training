@@ -14,9 +14,12 @@ from lib.utils.setup_logger import setup_logging, log_git_commit
 from helpers.generic import print_shape_info, print_data_samples, random_generator, squad_trim, add_char_level_stuff,\
     torch_model_summarize, generator_queue, evaluate
 
+
+# this is the main training file, call train.py to train the model
+# TODO some modifications are needed in this file for adv training.
+
 logger = logging.getLogger(__name__)
 wait_time = 0.01  # in seconds
-
 
 def the_main_function(config_dir='config', update_dict=None):
     # read config from yaml file

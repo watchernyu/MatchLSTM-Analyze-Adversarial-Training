@@ -1,3 +1,7 @@
+# this is the configuration file, change the entries here to configure how things run in
+# train.py
+# but should also be changable through terminal arguments
+
 dataset:
   h5: squad_dataset.1.1.2.h5
   model_save_path: 'saved_models/model.pt'
@@ -28,7 +32,7 @@ global:
 
 embedding:
   word_level:
-    path: glove.840B.300d.txt.h5
+    path: glove.6B.300d.txt.h5
     embedding_size: 300
     embedding_type: 'pretrained'  # pretrained, random
     embedding_trainable: False  # fix pretrained embedding

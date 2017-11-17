@@ -7,6 +7,7 @@ import argparse
 import json
 import sys
 
+#TODO figure out how to use this file for evaluating models against adv test sets
 
 def normalize_answer(s):
     """Lower text and remove punctuation, articles and extra whitespace."""
