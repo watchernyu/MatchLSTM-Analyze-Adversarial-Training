@@ -10,7 +10,7 @@ scheduling:
   batch_size: 64
   valid_batch_size: 64
   epoch: 50
-  enable_cuda: False  # disable this when running on machine without cuda
+  enable_cuda: True  # disable this when running on machine without cuda
   cuda_seed: 42
   
 optimizer:

@@ -1,9 +1,10 @@
-# don't worry about h5 files
+# don't worry about h5 files, zip, pyc, and things about logs and test
 *.h5
 *.pyc
 *.zip
 logs/
 .idea/
+simpleTesters/
 
 # Windows image file caches
 Thumbs.db

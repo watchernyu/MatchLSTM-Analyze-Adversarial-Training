@@ -62,6 +62,9 @@ def the_main_function(config_dir='config', update_dict=None):
             print("WARNING: You have a CUDA device, so you should probably run with --cuda")
         else:
             torch.cuda.manual_seed(model_config['scheduling']['cuda_seed'])
+    else:
+        print ("WARNING: no CUDA available, enable_cuda is disabled.")
+        model_config['scheduling']['enable_cuda'] = False
 
     # init model
     _model = MatchLSTMModel(model_config=model_config, data_specs=dataset.meta_data)
