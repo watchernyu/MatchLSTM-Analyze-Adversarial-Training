@@ -1,3 +1,10 @@
+# don't worry about h5 files
+*.h5
+*.pyc
+*.zip
+logs/
+.idea/
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db

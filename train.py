@@ -41,6 +41,8 @@ def the_main_function(config_dir='config', update_dict=None):
 
     # get data set from h5 file?
     # the dataset is basically all the things about squad data
+
+
     dataset = SquadDataset(dataset_h5=model_config['dataset']['h5'],
                            data_path='tokenized_squad_v1.1.2/',
                            ignore_case=True)

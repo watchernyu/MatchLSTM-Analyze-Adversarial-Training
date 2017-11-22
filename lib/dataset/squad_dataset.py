@@ -30,7 +30,7 @@ class SquadDataset(object):
 
     def _build(self):
         if not os.path.exists(self.dataset_h5):
-            # build an hdf5 version of the dataset it the requested one doesn't exist
+            # build an hdf5 version of the dataset if the requested one doesn't exist
             self._caches = dict(
                 _train_cache=dict(
                     story_word_id=[], question_word_id=[], answer_word_id=[], answer_heads=[], answer_tails=[]),

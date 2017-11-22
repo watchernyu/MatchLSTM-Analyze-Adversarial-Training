@@ -3,6 +3,7 @@ import zipfile
 import numpy as np
 import h5py
 
+#convert glove pretrained embedding (in .zip format) into .h5 (high dimensional array format) files
 
 def export_data_h5(vocabulary, embedding_matrix, output='embedding.h5'):
     f = h5py.File(output, "w")
@@ -18,8 +19,9 @@ def export_data_h5(vocabulary, embedding_matrix, output='embedding.h5'):
     f.close()
 
 
-def glove_export(embedding_file):
+def glove_export(embedding_file): # take in a zip file
     with zipfile.ZipFile(embedding_file) as zf:
+        #for each file in the .zip file, export a .h5 file
         for name in zf.namelist():
             vocabulary = []
             embeddings = []
@@ -30,6 +32,11 @@ def glove_export(embedding_file):
                     embeddings.append([float(x) for x in vals[1:]])
             export_data_h5(vocabulary, np.array(embeddings, dtype=np.float32), output=name + ".h5")
 
-
+# the file name here is hardcoded
+# now changed to use 6B so that things are faster
+# might change back later... #TODO
 if __name__ == '__main__':
-    glove_export('glove.840B.300d.zip')
+    glove_export('glove.6B.300d.zip')
+
+
+
