@@ -204,6 +204,8 @@ def the_main_function(config_dir='config', update_dict=None):
 if __name__ == "__main__":
     reload(sys)
     sys.setdefaultencoding("utf-8")
+
+    # make a directory for logs and saved models if their directory don't exist yet.
     for _p in ['logs', 'saved_models']:
         if not os.path.exists(_p):
             os.mkdir(_p)
