@@ -5,6 +5,7 @@
 logs/
 .idea/
 simpleTesters/
+saved_models
 
 # Windows image file caches
 Thumbs.db
