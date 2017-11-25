@@ -1,0 +1,8 @@
+ctrl-D to end ssh session
+
+# check gpu usage
+ssh gpu-[GPU_ID]
+nvidia-smi --query-gpu=utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv
+
+
+
