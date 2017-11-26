@@ -21,5 +21,5 @@ print common_words[:10]
 common_1000_words_file = open("common_1000.txt","w")
 n_common_words = 1000
 for i in range(n_common_words):
-    word = common_words[i][0]+"\n"
+    word = common_words[i][0]+"\t"
     common_1000_words_file.write(word)
