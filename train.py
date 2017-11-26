@@ -14,16 +14,21 @@ from lib.utils.setup_logger import setup_logging, log_git_commit
 from helpers.generic import print_shape_info, print_data_samples, random_generator, squad_trim, add_char_level_stuff,\
     torch_model_summarize, generator_queue, evaluate
 
-
 # this is the main training file, call train.py to train the model
 # TODO some modifications are needed in this file for adv training.
 
 logger = logging.getLogger(__name__)
 wait_time = 0.01  # in seconds
 
-def the_main_function(config_dir='config', update_dict=None):
+DEFAULT_DATA_FOLDER_PATH = 'tokenized_squad_v1.1.2/'
+DEFAULT_CONFIG_FILENAME = 'config_mlstm.yaml'
+MEDIUM_CONFIG_FILENAME = 'config_mlstm_medium.yaml'
+
+LOG_TEST_INFO = True
+
+def the_main_function(config_dir='config', update_dict=None,data_folder_path=DEFAULT_DATA_FOLDER_PATH,config_filename = DEFAULT_CONFIG_FILENAME):
     # read config from yaml file
-    cfname = 'config_mlstm.yaml'
+    cfname = config_filename
     _n = -1
     if args.t:
         # put a _model.yaml in config dir with smaller network
@@ -44,7 +49,7 @@ def the_main_function(config_dir='config', update_dict=None):
     # it takes the data in tokenized_squad_v1.1.2 directory
     # then convert them into a single .h5 file
     dataset = SquadDataset(dataset_h5=model_config['dataset']['h5'],
-                           data_path='tokenized_squad_v1.1.2/',
+                           data_path=data_folder_path,
                            ignore_case=True)
 
     # divide data into 3 parts (TODO is there random shuffle?)
@@ -216,5 +221,14 @@ if __name__ == "__main__":
     # parser.add_argument("result_file_npy", help="result file with npy format.")  # position argument example.
     parser.add_argument("-c", "--config_dir", default='config', help="the default config directory")
     parser.add_argument("-t", action='store_true', help="tiny test")
+
+    parser.add_argument("-d","--datapath",help="specify path to training data",default=DEFAULT_DATA_FOLDER_PATH ,type=str)
+    parser.add_argument("-m","--usemedium",help="use -m to indicate you want to use medium size embedding and model for faster training",action="store_true")
+
     args = parser.parse_args()
-    the_main_function(config_dir=args.config_dir)
+    if args.usemedium:
+        config_to_use = MEDIUM_CONFIG_FILENAME
+    else:
+        config_to_use = DEFAULT_CONFIG_FILENAME
+
+    the_main_function(config_dir=args.config_dir,data_folder_path=args.datapath,config_filename=config_to_use)

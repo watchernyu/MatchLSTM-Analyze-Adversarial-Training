@@ -2,6 +2,8 @@
 # train.py
 # but should also be changable through terminal arguments
 
+# this configuration file tells the program to do some very fast training using SMALL embedding and SMALL network layers
+
 dataset:
   h5: squad_dataset.1.1.2.h5
   model_save_path: 'saved_models/model_small.pt'
