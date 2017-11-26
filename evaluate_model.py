@@ -75,7 +75,6 @@ def the_main_function(config_dir='config', update_dict=None):
     if model_config['scheduling']['enable_cuda']:
         _model.cuda()
 
-    # TODO what is NLL?
     criterion = StandardNLL()
     if model_config['scheduling']['enable_cuda']:
         criterion = criterion.cuda()
