@@ -2,10 +2,17 @@
 # some adv training data
 import os
 import random
+import sys
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
-original_data_folder_path = "../squad_tokenized_original"
+original_data_folder_path = "../tokenized_squad_v1.1.2"
 train_question_filename = "train-v1.1-question.txt"
 train_story_filename = "train-v1.1-story.txt"
+
+valid_question_filename = "valid-v1.1-question.txt"
+valid_story_filename = "valid-v1.1-story.txt"
+
 new_data_folder_path = "../squad_adv_0"
 
 N_ADV_WORDS = 10 # this is the number of random words that we put at the end of the sentence (or elsewhere)
@@ -55,7 +62,6 @@ def write_to_file(file,listOfLines):
     for line in listOfLines:
         file.write(line+"\n")
 
-
 def generate_adversarial_data(original_data_folder_path,story_filename,question_filename,new_data_folder_path):
     # this function should be run for training data and validation data
 
@@ -91,6 +97,7 @@ def generate_adversarial_data(original_data_folder_path,story_filename,question_
     print "adversarial data generated at "+adv_train_story_filepath
 
 generate_adversarial_data(original_data_folder_path, train_story_filename, train_question_filename, new_data_folder_path)
+generate_adversarial_data(original_data_folder_path, valid_story_filename, valid_question_filename, new_data_folder_path)
 
 #
 # for line in lines:
