@@ -23,11 +23,13 @@ wait_time = 0.01  # in seconds
 DEFAULT_DATA_FOLDER_PATH = 'tokenized_squad_v1.1.2/'
 DEFAULT_CONFIG_FILENAME = 'config_mlstm.yaml'
 MEDIUM_CONFIG_FILENAME = 'config_mlstm_medium.yaml'
+DEFAULT_H5_FILENAME = 'squad_dataset.1.1.2.h5'
 
 LOG_TEST_INFO = True
 
-def the_main_function(config_dir='config', update_dict=None,data_folder_path=DEFAULT_DATA_FOLDER_PATH,config_filename = DEFAULT_CONFIG_FILENAME):
+def the_main_function(config_dir='config', update_dict=None,data_folder_path=DEFAULT_DATA_FOLDER_PATH,config_filename = DEFAULT_CONFIG_FILENAME,h5filename = DEFAULT_H5_FILENAME):
     # read config from yaml file
+    print "data folder path: "+data_folder_path
     cfname = config_filename
     _n = -1
     if args.t:
@@ -48,8 +50,8 @@ def the_main_function(config_dir='config', update_dict=None,data_folder_path=DEF
     # dataset is built by calling the SquadDataset class
     # it takes the data in tokenized_squad_v1.1.2 directory
     # then convert them into a single .h5 file
-    dataset = SquadDataset(dataset_h5=model_config['dataset']['h5'],
-                           data_path=data_folder_path,
+    dataset = SquadDataset(dataset_h5=h5filename,
+                           data_path=data_folder_path+"/",
                            ignore_case=True)
 
     # divide data into 3 parts (TODO is there random shuffle?)
@@ -225,6 +227,8 @@ if __name__ == "__main__":
     parser.add_argument("-t", action='store_true', help="tiny test")
 
     parser.add_argument("-d","--datapath",help="specify path to training data",default=DEFAULT_DATA_FOLDER_PATH ,type=str)
+    parser.add_argument("-h5","--datah5",help="specify filename of squad h5 file",default=DEFAULT_H5_FILENAME ,type=str)
+
     parser.add_argument("-m","--usemedium",help="use -m to indicate you want to use medium size embedding and model for faster training",action="store_true")
 
     args = parser.parse_args()
@@ -233,4 +237,4 @@ if __name__ == "__main__":
     else:
         config_to_use = DEFAULT_CONFIG_FILENAME
 
-    the_main_function(config_dir=args.config_dir,data_folder_path=args.datapath,config_filename=config_to_use)
+    the_main_function(config_dir=args.config_dir,data_folder_path=args.datapath,config_filename=config_to_use,h5filename=args.datah5)

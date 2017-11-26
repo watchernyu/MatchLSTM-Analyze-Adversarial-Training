@@ -3,7 +3,6 @@
 # but should also be changable through terminal arguments
 
 dataset:
-  h5: squad_dataset.1.1.2.h5
   model_save_path: 'saved_models/model.pt'
 
 scheduling:
