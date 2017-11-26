@@ -121,6 +121,7 @@ def the_main_function(config_dir='config', update_dict=None,data_folder_path=DEF
     best_val_f1 = None
     be_patient = 0
 
+    starttime = time.time() # this is used to count how much time it takes to run a single epoch
     try:
         for epoch in range(model_config['scheduling']['epoch']):
             _model.train()
@@ -158,7 +159,8 @@ def the_main_function(config_dir='config', update_dict=None,data_folder_path=DEF
                                                     trim_function=squad_trim, char_level_func=add_char_level_stuff,
                                                     word_id2word=word_vocab, char_word2id=char_word2id,
                                                     batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
-            logger.info("epoch=%d, valid nll loss=%.5f, valid f1=%.5f, valid em=%.5f, lr=%.6f" % (epoch, val_nll_loss, val_f1, val_em, learning_rate))
+            logger.info("epoch=%d, valid nll loss=%.5f, valid f1=%.5f, valid em=%.5f, lr=%.6f, timespent=%d" % (epoch, val_nll_loss, val_f1, val_em, learning_rate,time.time()-starttime))
+
             # Save the model if the validation loss is the best we've seen so far.
             if not best_val_f1 or val_f1 > best_val_f1:
                 with open(model_config['dataset']['model_save_path'], 'wb') as save_f:
