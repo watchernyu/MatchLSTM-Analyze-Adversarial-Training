@@ -7,8 +7,9 @@ logs/
 simpleTesters/
 saved_models
 Link_*
-# tokenizer uses python3.x and will not be compatible with rest of the project
-tokenizer/
+
+#this might be just some random file created by pycharm
+*.py___jb_tmp___
 
 # Windows image file caches
 Thumbs.db
