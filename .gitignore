@@ -7,6 +7,8 @@ logs/
 simpleTesters/
 saved_models
 Link_*
+# tokenizer uses python3.x and will not be compatible with rest of the project
+tokenizer/
 
 # Windows image file caches
 Thumbs.db
