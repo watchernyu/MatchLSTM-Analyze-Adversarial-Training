@@ -8,6 +8,7 @@ import yaml
 import torch
 from tqdm import tqdm
 from lib.dataset.squad_dataset import SquadDataset
+from lib.dataset.squad_dataset_testpart import SquadTestDataset # this is used to read in adv test sets
 from lib.models.match_lstm import MatchLSTMModel
 from lib.objectives.generic import StandardNLL
 from lib.utils.setup_logger import setup_logging, log_git_commit
@@ -20,14 +21,12 @@ from helpers.generic import print_shape_info, print_data_samples, random_generat
 logger = logging.getLogger(__name__)
 wait_time = 0.01  # in seconds
 
-DEFAULT_DATA_FOLDER_PATH = 'tokenized_squad_v1.1.2/'
+DEFAULT_DATA_FOLDER_PATH = 'tokenized_squad_v1.1.2'
 DEFAULT_CONFIG_FILENAME = 'config_mlstm.yaml'
 MEDIUM_CONFIG_FILENAME = 'config_mlstm_medium.yaml'
 DEFAULT_H5_FILENAME = 'squad_dataset.1.1.2.h5'
 DEFAULT_MODEL_NAME = 'squad_original'
 PLOTLOG_FOLDER = 'plotlogs'
-
-LOG_TEST_INFO = True
 
 def the_main_function(name_of_model,config_dir='config', update_dict=None,data_folder_path=DEFAULT_DATA_FOLDER_PATH,config_filename = DEFAULT_CONFIG_FILENAME,h5filename = DEFAULT_H5_FILENAME):
     # read config from yaml file
@@ -57,10 +56,19 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     model_save_path = os.path.join(model_config['dataset']['model_save_folder'],name_of_model)+".pt"
 
     # open plotlog file to do some extra logging for easy plotting later
+    # this file records the validation result at end of each epoch
     plotlog_filename = name_of_model+".tsv"
     plotlog_path = os.path.join(PLOTLOG_FOLDER,plotlog_filename)
     plotlog_fpt = open(plotlog_path,'w')
+    plotlog_fpt.write(name_of_model+"\n")
     plotlog_fpt.write("epoch\tnll_loss\tf1\tem\tlr\ttime\n")
+
+    # this file is used to log the test set evaluation results
+    testplotlog_filename = name_of_model+"test.tsv"
+    testplotlog_path = os.path.join(PLOTLOG_FOLDER,testplotlog_filename)
+    testplotlog_fpt = open(testplotlog_path,'w')
+    testplotlog_fpt.write(name_of_model+"\n")
+    testplotlog_fpt.write("testset\tnll_loss\tf1\tem\n")
 
     # the dataset is basically all the things about squad data
     # dataset is built by calling the SquadDataset class
@@ -70,13 +78,27 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
                            data_path=data_folder_path+"/",
                            ignore_case=True)
 
-    # divide data into 3 parts (TODO is there random shuffle?)
+    # divide data into 3 parts
     train_data, valid_data, test_data = dataset.get_data(train_size=TRAIN_SIZE, valid_size=VALID_SIZE, test_size=TEST_SIZE)
     print_shape_info(train_data)
     if False:
         print('----------------------------------  printing out data shape')
         print_data_samples(dataset, train_data, 12, 15)
         exit(0)
+
+    ##########################################################################################################
+    # after read in the train, valid and dev set
+    # train and valid have settings specified by folder name, dev set for each of 6 models is the original squad dataset
+    # now for the following part, we get 3 extra testsets
+    # add_any_4, add one sent and add best sent
+
+    testdataset = SquadTestDataset(dataset_h5='squad_testset.1.0.h5',
+                                   data_path='test_data' + "/",
+                                   ignore_case=True)
+
+    # after the model finished training, we will test its performance on these 3 datasets
+    add_any_4_testdata, add_one_sent_testdata, add_best_sent_testdata = testdataset.get_data(train_size=TEST_SIZE,valid_size=TEST_SIZE, test_size=TEST_SIZE)  # each is a data dict
+    ###########################################################################################################
 
     # Set the random seed manually for reproducibility.
     torch.manual_seed(model_config['scheduling']['cuda_seed'])
@@ -219,13 +241,41 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
         _model = torch.load(save_f)
 
     # Run on test data.
-    logger.info("loading best model------------------------------------------------------------------\n")
+    logger.info("loading best model and evaluate on original squad test (dev) sets------------------------------------------------------------------\n")
     test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data, criterion=criterion,
                                                trim_function=squad_trim, char_level_func=add_char_level_stuff,
                                                word_id2word=word_vocab, char_word2id=char_word2id,
                                                batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
     logger.info("------------------------------------------------------------------------------------\n")
     logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
+    testplotlog_fpt.write("OriginalSquad\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
+
+    logger.info("evaluate on add any 4 test set------------------------------------------------------------------\n")
+    test_f1, test_em, test_nll_loss = evaluate(model=_model, data=add_any_4_testdata, criterion=criterion,
+                                               trim_function=squad_trim, char_level_func=add_char_level_stuff,
+                                               word_id2word=word_vocab, char_word2id=char_word2id,
+                                               batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
+    logger.info("------------------------------------------------------------------------------------\n")
+    logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
+    testplotlog_fpt.write("AddAny4\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
+
+    logger.info("evaluate on add one sent test set------------------------------------------------------------------\n")
+    test_f1, test_em, test_nll_loss = evaluate(model=_model, data=add_one_sent_testdata, criterion=criterion,
+                                               trim_function=squad_trim, char_level_func=add_char_level_stuff,
+                                               word_id2word=word_vocab, char_word2id=char_word2id,
+                                               batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
+    logger.info("------------------------------------------------------------------------------------\n")
+    logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
+    testplotlog_fpt.write("AddOneSent\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
+
+    logger.info("evaluate on add best sent test set------------------------------------------------------------------\n")
+    test_f1, test_em, test_nll_loss = evaluate(model=_model, data=add_best_sent_testdata, criterion=criterion,
+                                               trim_function=squad_trim, char_level_func=add_char_level_stuff,
+                                               word_id2word=word_vocab, char_word2id=char_word2id,
+                                               batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
+    logger.info("------------------------------------------------------------------------------------\n")
+    logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
+    testplotlog_fpt.write("AddBestSent\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
 
     return
 
@@ -244,7 +294,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="train network.")
     # parser.add_argument("result_file_npy", help="result file with npy format.")  # position argument example.
     parser.add_argument("-c", "--config_dir", default='config', help="the default config directory")
-    parser.add_argument("-t", action='store_true', help="tiny test, set this to true if you want to do some fast test, the model will only use 100 data entries for everything")
+    parser.add_argument("-t", action='store_true', help="tiny test, set this flag if you want to do some fast test, the model will only use 100 data entries for everything")
 
     parser.add_argument("-d","--datapath",help="specify path to training data",default=DEFAULT_DATA_FOLDER_PATH ,type=str)
     parser.add_argument("-h5","--datah5",help="specify filename of squad h5 file, you can simply sepecify a name related to the datapath",default=DEFAULT_H5_FILENAME ,type=str)
