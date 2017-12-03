@@ -4,5 +4,8 @@ ctrl-D to end ssh session
 ssh gpu-[GPU_ID]
 nvidia-smi --query-gpu=utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv
 
+# check all jobs of a user
+squeue -u <username>
 
-
+#cancel a job
+scancel <jobid>

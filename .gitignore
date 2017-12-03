@@ -11,6 +11,12 @@ Link_*
 #this might be just some random file created by pycharm
 *.py___jb_tmp___
 
+# these dav data files are too big, will not track them
+advdata/
+
+# will not track temp files from hpc
+temp_files_from_hpc
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
