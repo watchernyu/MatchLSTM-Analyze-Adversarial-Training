@@ -1,0 +1,6 @@
+# use the commands here to test the model quickly on hpc
+
+python train.py -t -name fastmodel -d advdata/advdata_any_1 -h5 adv_any_1.h5
+
+
+
