@@ -24,27 +24,43 @@ DEFAULT_DATA_FOLDER_PATH = 'tokenized_squad_v1.1.2/'
 DEFAULT_CONFIG_FILENAME = 'config_mlstm.yaml'
 MEDIUM_CONFIG_FILENAME = 'config_mlstm_medium.yaml'
 DEFAULT_H5_FILENAME = 'squad_dataset.1.1.2.h5'
+DEFAULT_MODEL_NAME = 'squad_original'
+PLOTLOG_FOLDER = 'plotlogs'
 
 LOG_TEST_INFO = True
 
-def the_main_function(config_dir='config', update_dict=None,data_folder_path=DEFAULT_DATA_FOLDER_PATH,config_filename = DEFAULT_CONFIG_FILENAME,h5filename = DEFAULT_H5_FILENAME):
+def the_main_function(name_of_model,config_dir='config', update_dict=None,data_folder_path=DEFAULT_DATA_FOLDER_PATH,config_filename = DEFAULT_CONFIG_FILENAME,h5filename = DEFAULT_H5_FILENAME):
     # read config from yaml file
+
     print "data folder path: "+data_folder_path
     cfname = config_filename
-    _n = -1
-    if args.t:
-        # put a _model.yaml in config dir with smaller network
-        # cfname = '_' + cfname
-        _n = 100
-
-    TRAIN_SIZE = _n
-    VALID_SIZE = _n
-    TEST_SIZE = _n
 
     # read configurations from config file
     config_file = os.path.join(config_dir, cfname)
     with open(config_file) as reader:
         model_config = yaml.safe_load(reader)
+
+    # _n = - 1 means use all data
+    _n = -1
+    if args.t:
+        # if doing tiny test
+        # then only use 100 data
+        # also, only run for 2 epoches
+        _n = 100
+        model_config['scheduling']['epoch'] = 2
+
+    TRAIN_SIZE = _n
+    VALID_SIZE = _n
+    TEST_SIZE = _n
+
+    # the model will be saved here, the name of the save file can be specified using -name
+    model_save_path = os.path.join(model_config['dataset']['model_save_folder'],name_of_model)+".pt"
+
+    # open plotlog file to do some extra logging for easy plotting later
+    plotlog_filename = name_of_model+".tsv"
+    plotlog_path = os.path.join(PLOTLOG_FOLDER,plotlog_filename)
+    plotlog_fpt = open(plotlog_path,'w')
+    plotlog_fpt.write("epoch\tnll_loss\tf1\tem\tlr\ttime\n")
 
     # the dataset is basically all the things about squad data
     # dataset is built by calling the SquadDataset class
@@ -78,7 +94,6 @@ def the_main_function(config_dir='config', update_dict=None,data_folder_path=DEF
     if model_config['scheduling']['enable_cuda']:
         _model.cuda()
 
-    # TODO what is NLL?
     criterion = StandardNLL()
     if model_config['scheduling']['enable_cuda']:
         criterion = criterion.cuda()
@@ -163,9 +178,12 @@ def the_main_function(config_dir='config', update_dict=None,data_folder_path=DEF
                                                     batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
             logger.info("epoch=%d, valid nll loss=%.5f, valid f1=%.5f, valid em=%.5f, lr=%.6f, timespent=%d" % (epoch, val_nll_loss, val_f1, val_em, learning_rate,time.time()-starttime))
 
+            # also log to plotlog file
+            plotlog_fpt.write(str(epoch)+"\t"+str(val_nll_loss)+"\t"+str(val_f1)+"\t"+str(val_em)+"\t"+str(learning_rate)+"\t"+str(time.time()-starttime)+"\n")
+
             # Save the model if the validation loss is the best we've seen so far.
             if not best_val_f1 or val_f1 > best_val_f1:
-                with open(model_config['dataset']['model_save_path'], 'wb') as save_f:
+                with open(model_save_path, 'wb') as save_f:
                     torch.save(_model, save_f)
                 best_val_f1 = val_f1
                 be_patient = 0
@@ -182,11 +200,13 @@ def the_main_function(config_dir='config', update_dict=None,data_folder_path=DEF
                             logger.info('learning rate %.5f reached lower bound' % (learning_rate))
                     be_patient += 1
 
-            test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data, criterion=criterion,
-                                                       trim_function=squad_trim, char_level_func=add_char_level_stuff,
-                                                       word_id2word=word_vocab, char_word2id=char_word2id,
-                                                       batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
-            logger.info("test: nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
+            # shouldn't look at test set
+            # commenting out this part of the original implementation
+            # test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data, criterion=criterion,
+            #                                            trim_function=squad_trim, char_level_func=add_char_level_stuff,
+            #                                            word_id2word=word_vocab, char_word2id=char_word2id,
+            #                                            batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
+            # logger.info("test: nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
             logger.info("========================================================================\n")
 
     # At any point you can hit Ctrl + C to break out of training early.
@@ -195,7 +215,7 @@ def the_main_function(config_dir='config', update_dict=None,data_folder_path=DEF
         logger.info('Exiting from training early\n')
 
     # Load the best saved model.
-    with open(model_config['dataset']['model_save_path'], 'rb') as save_f:
+    with open(model_save_path, 'rb') as save_f:
         _model = torch.load(save_f)
 
     # Run on test data.
@@ -224,12 +244,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="train network.")
     # parser.add_argument("result_file_npy", help="result file with npy format.")  # position argument example.
     parser.add_argument("-c", "--config_dir", default='config', help="the default config directory")
-    parser.add_argument("-t", action='store_true', help="tiny test")
+    parser.add_argument("-t", action='store_true', help="tiny test, set this to true if you want to do some fast test, the model will only use 100 data entries for everything")
 
     parser.add_argument("-d","--datapath",help="specify path to training data",default=DEFAULT_DATA_FOLDER_PATH ,type=str)
-    parser.add_argument("-h5","--datah5",help="specify filename of squad h5 file",default=DEFAULT_H5_FILENAME ,type=str)
+    parser.add_argument("-h5","--datah5",help="specify filename of squad h5 file, you can simply sepecify a name related to the datapath",default=DEFAULT_H5_FILENAME ,type=str)
 
     parser.add_argument("-m","--usemedium",help="use -m to indicate you want to use medium size embedding and model for faster training",action="store_true")
+
+    parser.add_argument("-name","--nameOfModel",help="specify the name of the model to save",default=DEFAULT_MODEL_NAME ,type=str)
 
     args = parser.parse_args()
     if args.usemedium:
@@ -237,4 +259,4 @@ if __name__ == "__main__":
     else:
         config_to_use = DEFAULT_CONFIG_FILENAME
 
-    the_main_function(config_dir=args.config_dir,data_folder_path=args.datapath,config_filename=config_to_use,h5filename=args.datah5)
+    the_main_function(name_of_model=args.nameOfModel,config_dir=args.config_dir,data_folder_path=args.datapath,config_filename=config_to_use,h5filename=args.datah5)
