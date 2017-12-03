@@ -13,6 +13,7 @@ Link_*
 
 # these dav data files are too big, will not track them
 advdata/
+test_data/
 
 # will not track temp files from hpc
 temp_files_from_hpc
