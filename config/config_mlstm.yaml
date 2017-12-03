@@ -3,12 +3,12 @@
 # but should also be changable through terminal arguments
 
 dataset:
-  model_save_path: 'saved_models/model.pt'
+  model_save_folder: 'saved_models'
 
 scheduling:
   batch_size: 64
   valid_batch_size: 64
-  epoch: 50
+  epoch: 30
   enable_cuda: True  # disable this when running on machine without cuda
   cuda_seed: 42
   
