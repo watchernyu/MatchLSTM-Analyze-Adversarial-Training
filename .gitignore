@@ -3,10 +3,13 @@
 *.pyc
 *.zip
 logs/
+plotlogs/
 .idea/
 simpleTesters/
 saved_models
 Link_*
+
+
 
 #this might be just some random file created by pycharm
 *.py___jb_tmp___
