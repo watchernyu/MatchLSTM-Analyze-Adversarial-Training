@@ -8,7 +8,7 @@ dataset:
 scheduling:
   batch_size: 64
   valid_batch_size: 64
-  epoch: 30
+  epoch: 12
   enable_cuda: True  # disable this when running on machine without cuda
   cuda_seed: 42
   
