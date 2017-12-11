@@ -7,6 +7,8 @@
 #SBATCH --time=0:20:00
 #SBATCH --nodes=1
 #SBATCH --mem=12GB
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=cw1681@nyu.edu
 
 cd MatchLSTM-PyTorch/
 source activate matchlstm

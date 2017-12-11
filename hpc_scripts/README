@@ -1,0 +1,7 @@
+all hpc scripts need to be run under the ~ directory in hpc
+so in hpc_scripts directory, use the command
+
+mv *.sh ~/
+
+to move all such scripts to your ~ directory
+and then use sbatch to submit them as jobs
