@@ -110,8 +110,16 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
         print ("WARNING: no CUDA available, enable_cuda is disabled.")
         model_config['scheduling']['enable_cuda'] = False
 
-    # init model
-    _model = MatchLSTMModel(model_config=model_config, data_specs=dataset.meta_data)
+    # here we add the option of continue training the model
+    if args.r and os.path.isfile(model_save_path):
+        logger.info('##### MODEL EXIST, CONTINUE TRAINING EXISTING MODEL #####')
+        with open(model_save_path, 'rb') as save_f:
+            _model = torch.load(save_f)
+    else:
+        logger.info('##### INIT UNTRAINED MODEL #####')
+        # init untrained model
+        _model = MatchLSTMModel(model_config=model_config, data_specs=dataset.meta_data)
+
     if model_config['scheduling']['enable_cuda']:
         _model.cuda()
 
@@ -295,11 +303,14 @@ if __name__ == "__main__":
     # parser.add_argument("result_file_npy", help="result file with npy format.")  # position argument example.
     parser.add_argument("-c", "--config_dir", default='config', help="the default config directory")
     parser.add_argument("-t", action='store_true', help="tiny test, set this flag if you want to do some fast test, the model will only use 100 data entries for everything")
+    parser.add_argument("-r", action='store_true',
+                        help="continue to train an existing model, the program will check if the model exist, if so then load the model and continue to train it")
 
     parser.add_argument("-d","--datapath",help="specify path to training data",default=DEFAULT_DATA_FOLDER_PATH ,type=str)
     parser.add_argument("-h5","--datah5",help="specify filename of squad h5 file, you can simply sepecify a name related to the datapath",default=DEFAULT_H5_FILENAME ,type=str)
 
     parser.add_argument("-name","--nameOfModel",help="specify the name of the model to save",default=DEFAULT_MODEL_NAME ,type=str)
+
 
     args = parser.parse_args()
 
