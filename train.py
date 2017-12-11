@@ -168,8 +168,11 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     be_patient = 0
 
     starttime = time.time() # this is used to count how much time it takes to run a single epoch
+
+    startEpoch = args.e # for example, if first run trained 12 epoches, then in the second run, use "-e 12" to tell the program
+    # that you are running starting from epoch 12.
     try:
-        for epoch in range(model_config['scheduling']['epoch']):
+        for epoch in range(startEpoch,startEpoch+model_config['scheduling']['epoch']):
             _model.train()
             sum_loss = 0.0
             with tqdm(total=number_batch, leave=True, ncols=160, ascii=True) as pbar:
@@ -310,7 +313,8 @@ if __name__ == "__main__":
     parser.add_argument("-h5","--datah5",help="specify filename of squad h5 file, you can simply sepecify a name related to the datapath",default=DEFAULT_H5_FILENAME ,type=str)
 
     parser.add_argument("-name","--nameOfModel",help="specify the name of the model to save",default=DEFAULT_MODEL_NAME ,type=str)
-
+    parser.add_argument("-e", "--startEpoch", help="specify the starting epoch of the model, this is used when continue training existing model",
+                        default=0, type=int)
 
     args = parser.parse_args()
 
