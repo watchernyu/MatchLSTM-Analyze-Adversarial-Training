@@ -16,14 +16,12 @@ from helpers.generic import print_shape_info, print_data_samples, random_generat
     torch_model_summarize, generator_queue, evaluate
 
 # this is the main training file, call train.py to train the model
-# TODO some modifications are needed in this file for adv training.
 
 logger = logging.getLogger(__name__)
 wait_time = 0.01  # in seconds
 
 DEFAULT_DATA_FOLDER_PATH = 'tokenized_squad_v1.1.2'
 DEFAULT_CONFIG_FILENAME = 'config_mlstm.yaml'
-MEDIUM_CONFIG_FILENAME = 'config_mlstm_medium.yaml'
 DEFAULT_H5_FILENAME = 'squad_dataset.1.1.2.h5'
 DEFAULT_MODEL_NAME = 'squad_original'
 PLOTLOG_FOLDER = 'plotlogs'
@@ -33,6 +31,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
 
     print "data folder path: "+data_folder_path
     cfname = config_filename
+    timestring = time.strftime("%m%d%H%M%S")
 
     # read configurations from config file
     config_file = os.path.join(config_dir, cfname)
@@ -46,7 +45,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
         # then only use 100 data
         # also, only run for 2 epoches
         _n = 100
-        model_config['scheduling']['epoch'] = 2
+        model_config['scheduling']['epoch'] = 15
 
     TRAIN_SIZE = _n
     VALID_SIZE = _n
@@ -57,14 +56,14 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
 
     # open plotlog file to do some extra logging for easy plotting later
     # this file records the validation result at end of each epoch
-    plotlog_filename = name_of_model+".tsv"
+    plotlog_filename = name_of_model+"_"+timestring+"_plot.tsv"
     plotlog_path = os.path.join(PLOTLOG_FOLDER,plotlog_filename)
     plotlog_fpt = open(plotlog_path,'w')
     plotlog_fpt.write(name_of_model+"\n")
     plotlog_fpt.write("epoch\tnll_loss\tf1\tem\tlr\ttime\n")
 
     # this file is used to log the test set evaluation results
-    testplotlog_filename = name_of_model+"test.tsv"
+    testplotlog_filename = name_of_model+"_"+timestring+"_test.tsv"
     testplotlog_path = os.path.join(PLOTLOG_FOLDER,testplotlog_filename)
     testplotlog_fpt = open(testplotlog_path,'w')
     testplotlog_fpt.write(name_of_model+"\n")
@@ -202,7 +201,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
 
             # also log to plotlog file
             plotlog_fpt.write(str(epoch)+"\t"+str(val_nll_loss)+"\t"+str(val_f1)+"\t"+str(val_em)+"\t"+str(learning_rate)+"\t"+str(time.time()-starttime)+"\n")
-
+            plotlog_fpt.flush()
             # Save the model if the validation loss is the best we've seen so far.
             if not best_val_f1 or val_f1 > best_val_f1:
                 with open(model_save_path, 'wb') as save_f:
@@ -249,6 +248,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     logger.info("------------------------------------------------------------------------------------\n")
     logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
     testplotlog_fpt.write("OriginalSquad\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
+    testplotlog_fpt.flush()
 
     logger.info("evaluate on add any 4 test set------------------------------------------------------------------\n")
     test_f1, test_em, test_nll_loss = evaluate(model=_model, data=add_any_4_testdata, criterion=criterion,
@@ -258,7 +258,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     logger.info("------------------------------------------------------------------------------------\n")
     logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
     testplotlog_fpt.write("AddAny4\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
-
+    testplotlog_fpt.flush()
     logger.info("evaluate on add one sent test set------------------------------------------------------------------\n")
     test_f1, test_em, test_nll_loss = evaluate(model=_model, data=add_one_sent_testdata, criterion=criterion,
                                                trim_function=squad_trim, char_level_func=add_char_level_stuff,
@@ -267,7 +267,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     logger.info("------------------------------------------------------------------------------------\n")
     logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
     testplotlog_fpt.write("AddOneSent\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
-
+    testplotlog_fpt.flush()
     logger.info("evaluate on add best sent test set------------------------------------------------------------------\n")
     test_f1, test_em, test_nll_loss = evaluate(model=_model, data=add_best_sent_testdata, criterion=criterion,
                                                trim_function=squad_trim, char_level_func=add_char_level_stuff,
@@ -276,7 +276,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     logger.info("------------------------------------------------------------------------------------\n")
     logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
     testplotlog_fpt.write("AddBestSent\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
-
+    testplotlog_fpt.flush()
     return
 
 
@@ -299,14 +299,10 @@ if __name__ == "__main__":
     parser.add_argument("-d","--datapath",help="specify path to training data",default=DEFAULT_DATA_FOLDER_PATH ,type=str)
     parser.add_argument("-h5","--datah5",help="specify filename of squad h5 file, you can simply sepecify a name related to the datapath",default=DEFAULT_H5_FILENAME ,type=str)
 
-    parser.add_argument("-m","--usemedium",help="use -m to indicate you want to use medium size embedding and model for faster training",action="store_true")
-
     parser.add_argument("-name","--nameOfModel",help="specify the name of the model to save",default=DEFAULT_MODEL_NAME ,type=str)
 
     args = parser.parse_args()
-    if args.usemedium:
-        config_to_use = MEDIUM_CONFIG_FILENAME
-    else:
-        config_to_use = DEFAULT_CONFIG_FILENAME
+
+    config_to_use = DEFAULT_CONFIG_FILENAME
 
     the_main_function(name_of_model=args.nameOfModel,config_dir=args.config_dir,data_folder_path=args.datapath,config_filename=config_to_use,h5filename=args.datah5)
