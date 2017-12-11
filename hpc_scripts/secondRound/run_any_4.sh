@@ -13,5 +13,5 @@
 
 cd MatchLSTM-PyTorch/
 source activate matchlstm
-python train.py -name any_4 -d advdata/advdata_any_4 -h5 adv_any_4.h5 -e 12
+python train.py -name any_4 -d advdata/advdata_any_4 -h5 adv_any_4.h5 -r -e 12
 

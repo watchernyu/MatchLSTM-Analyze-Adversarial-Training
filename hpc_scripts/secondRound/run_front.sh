@@ -13,5 +13,5 @@
 
 cd MatchLSTM-PyTorch/
 source activate matchlstm
-python train.py -name front_only -d advdata/advdata_front_only -h5 adv_front.h5 -e 12
+python train.py -name front_only -d advdata/advdata_front_only -h5 adv_front.h5 -r -e 12
 

@@ -13,5 +13,5 @@
 
 cd MatchLSTM-PyTorch/
 source activate matchlstm
-python train.py -name original -d tokenized_squad_v1.1.2 -h5 original.h5 -e 12
+python train.py -name original -d tokenized_squad_v1.1.2 -h5 original.h5 -r -e 12
 
