@@ -169,7 +169,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
 
     starttime = time.time() # this is used to count how much time it takes to run a single epoch
 
-    startEpoch = args.e # for example, if first run trained 12 epoches, then in the second run, use "-e 12" to tell the program
+    startEpoch = args.startEpoch # for example, if first run trained 12 epoches, then in the second run, use "-e 12" to tell the program
     # that you are running starting from epoch 12.
     try:
         for epoch in range(startEpoch,startEpoch+model_config['scheduling']['epoch']):

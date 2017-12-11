@@ -8,6 +8,8 @@
 #SBATCH --nodes=1
 #SBATCH --mem=16GB
 #SBATCH --gres=gpu:1
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=cw1681@nyu.edu
 
 cd MatchLSTM-PyTorch/
 source activate matchlstm
