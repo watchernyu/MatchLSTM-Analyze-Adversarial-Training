@@ -180,8 +180,13 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
 
     startEpoch = args.startEpoch # for example, if first run trained 12 epoches, then in the second run, use "-e 12" to tell the program
     # that you are running starting from epoch 12.
+    if args.forceepoch>0:
+        number_of_epoch = args.forceepoch
+    else:
+        number_of_epoch = model_config['scheduling']['epoch']
+
     try:
-        for epoch in range(startEpoch,startEpoch+model_config['scheduling']['epoch']):
+        for epoch in range(startEpoch,startEpoch+number_of_epoch):
             _model.train()
             sum_loss = 0.0
             with tqdm(total=number_batch, leave=True, ncols=160, ascii=True) as pbar:
@@ -325,10 +330,12 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--startEpoch", help="specify the starting epoch of the model, this is used when continue training existing model",
                         default=0, type=int)
 
-    parser.add_argument("-bs", "--forcebatchsize", help="specify batch size to use (only for testing)",
+    parser.add_argument("-fbs", "--forcebatchsize", help="specify batch size to use (only for testing)",
                         default=-1, type=int)
     parser.add_argument("-fng", action='store_true',
                         help="force not use gpu, set it to true to not use gpu, only for testing")
+    parser.add_argument("-fep", "--forceepoch", help="specify number of epoch to use (only for testing)",
+                        default=-1, type=int)
 
     args = parser.parse_args()
 
