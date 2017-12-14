@@ -110,6 +110,9 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
         print ("WARNING: no CUDA available, enable_cuda is disabled.")
         model_config['scheduling']['enable_cuda'] = False
 
+    if args.fng:
+        model_config['scheduling']['enable_cuda'] = False
+
     # here we add the option of continue training the model
     if args.r and os.path.isfile(model_save_path):
         logger.info('##### MODEL EXIST, CONTINUE TRAINING EXISTING MODEL #####')
@@ -141,8 +144,14 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
 
     input_keys = ['input_story', 'input_question', 'input_story_char', 'input_question_char']
     output_keys = ['answer_ranges']
-    batch_size = model_config['scheduling']['batch_size']
-    valid_batch_size = model_config['scheduling']['valid_batch_size']
+
+    if args.forcebatchsize > 0:
+        batch_size = args.forcebatchsize
+        valid_batch_size = args.forcebatchsize
+    else:
+        batch_size = model_config['scheduling']['batch_size']
+        valid_batch_size = model_config['scheduling']['valid_batch_size']
+
     _f = h5py.File(dataset.dataset_h5, 'r')
     word_vocab = _f['words_flatten'][0].split('\n')
     word_vocab = list(word_vocab)
@@ -315,6 +324,11 @@ if __name__ == "__main__":
     parser.add_argument("-name","--nameOfModel",help="specify the name of the model to save",default=DEFAULT_MODEL_NAME ,type=str)
     parser.add_argument("-e", "--startEpoch", help="specify the starting epoch of the model, this is used when continue training existing model",
                         default=0, type=int)
+
+    parser.add_argument("-bs", "--forcebatchsize", help="specify batch size to use (only for testing)",
+                        default=-1, type=int)
+    parser.add_argument("-fng", action='store_true',
+                        help="force not use gpu, set it to true to not use gpu, only for testing")
 
     args = parser.parse_args()
 
