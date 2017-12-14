@@ -47,6 +47,9 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
         _n = 100
         model_config['scheduling']['epoch'] = 15
 
+    if args.forcedatasize>0:
+        _n = args.forcedatasize
+
     TRAIN_SIZE = _n
     VALID_SIZE = _n
     TEST_SIZE = _n
@@ -335,6 +338,9 @@ if __name__ == "__main__":
     parser.add_argument("-fng", action='store_true',
                         help="force not use gpu, set it to true to not use gpu, only for testing")
     parser.add_argument("-fep", "--forceepoch", help="specify number of epoch to use (only for testing)",
+                        default=-1, type=int)
+
+    parser.add_argument("-fds", "--forcedatasize", help="specify number of data to use for each epoch (only for testing)",
                         default=-1, type=int)
 
     args = parser.parse_args()
