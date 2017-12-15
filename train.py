@@ -62,7 +62,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     plotlog_filename = name_of_model+"_"+timestring+"_plot.tsv"
     plotlog_path = os.path.join(PLOTLOG_FOLDER,plotlog_filename)
 
-    if not args.evalutionOnly: # basically if it's evalution only, then don't write training traces (there will be no training traces)
+    if not args.evaluationOnly: # basically if it's evalution only, then don't write training traces (there will be no training traces)
         plotlog_fpt = open(plotlog_path,'w')
         plotlog_fpt.write(name_of_model+"\n")
         plotlog_fpt.write("epoch\tnll_loss\tf1\tem\tlr\ttime\n")
@@ -117,16 +117,16 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
         model_config['scheduling']['enable_cuda'] = False
 
     # we have the option of continue training the model
-    # in evalutionOnly mode we also just load the exisitng model
+    # in evaluationOnly mode we also just load the exisitng model
 
-    if args.evalutionOnly and (not os.path.isfile(model_save_path)):
+    if args.evaluationOnly and (not os.path.isfile(model_save_path)):
         logger.info('##### MODEL NOT FOUND IN EVALUTION ONLY MODEL, QUIT PROGRAM #####')
         return
 
-    if (args.r or args.evalutionOnly) and (os.path.isfile(model_save_path)):
+    if (args.r or args.evaluationOnly) and (os.path.isfile(model_save_path)):
         if args.r:
             logger.info('##### MODEL EXIST, CONTINUE TRAINING EXISTING MODEL #####')
-        if args.evalutionOnly:
+        if args.evaluationOnly:
             logger.info('##### !!!!USING EXISTING MODEL FOR EVALUTION!!!! #####\n')
 
         with open(model_save_path, 'rb') as save_f:
@@ -211,7 +211,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     else:
         number_of_epoch = model_config['scheduling']['epoch']
 
-    if args.evalutionOnly:
+    if args.evaluationOnly:
         # in evalution only mode we don't want any training! so set the epoch to zero
         number_of_epoch = 0
 
