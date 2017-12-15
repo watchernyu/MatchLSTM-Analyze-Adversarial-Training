@@ -311,6 +311,17 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     testplotlog_fpt.flush()
 
 
+    logger.info("following use different word_vocab ------------------------------------------------------------------\n")
+    test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data, criterion=criterion,
+                                               trim_function=squad_trim, char_level_func=add_char_level_stuff,
+                                               word_id2word=word_vocab_test, char_word2id=char_word2id_test,
+                                               batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
+    logger.info("------------------------------------------------------------------------------------\n")
+    logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
+    testplotlog_fpt.write("OriginalSquad\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
+    testplotlog_fpt.flush()
+
+
     # here we should change the word_vocab etc so that the model knows it's going to do testing on other test sets!!!!!!
     # otherwise the model gets errors
 
