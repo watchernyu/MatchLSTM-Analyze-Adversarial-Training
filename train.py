@@ -61,9 +61,11 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     # this file records the validation result at end of each epoch
     plotlog_filename = name_of_model+"_"+timestring+"_plot.tsv"
     plotlog_path = os.path.join(PLOTLOG_FOLDER,plotlog_filename)
-    plotlog_fpt = open(plotlog_path,'w')
-    plotlog_fpt.write(name_of_model+"\n")
-    plotlog_fpt.write("epoch\tnll_loss\tf1\tem\tlr\ttime\n")
+
+    if not args.evalutionOnly: # basically if it's evalution only, then don't write training traces (there will be no training traces)
+        plotlog_fpt = open(plotlog_path,'w')
+        plotlog_fpt.write(name_of_model+"\n")
+        plotlog_fpt.write("epoch\tnll_loss\tf1\tem\tlr\ttime\n")
 
     # this file is used to log the test set evaluation results
     testplotlog_filename = name_of_model+"_"+timestring+"_test.tsv"
@@ -114,9 +116,19 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     if args.fng:
         model_config['scheduling']['enable_cuda'] = False
 
-    # here we add the option of continue training the model
-    if args.r and os.path.isfile(model_save_path):
-        logger.info('##### MODEL EXIST, CONTINUE TRAINING EXISTING MODEL #####')
+    # we have the option of continue training the model
+    # in evalutionOnly mode we also just load the exisitng model
+
+    if args.evalutionOnly and (not os.path.isfile(model_save_path)):
+        logger.info('##### MODEL NOT FOUND IN EVALUTION ONLY MODEL, QUIT PROGRAM #####')
+        return
+
+    if (args.r or args.evalutionOnly) and (os.path.isfile(model_save_path)):
+        if args.r:
+            logger.info('##### MODEL EXIST, CONTINUE TRAINING EXISTING MODEL #####')
+        if args.evalutionOnly:
+            logger.info('##### !!!!USING EXISTING MODEL FOR EVALUTION!!!! #####\n')
+
         with open(model_save_path, 'rb') as save_f:
             _model = torch.load(save_f)
     else:
@@ -198,6 +210,10 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
         number_of_epoch = args.forceepoch
     else:
         number_of_epoch = model_config['scheduling']['epoch']
+
+    if args.evalutionOnly:
+        # in evalution only mode we don't want any training! so set the epoch to zero
+        number_of_epoch = 0
 
     try:
         for epoch in range(startEpoch,startEpoch+number_of_epoch):
@@ -363,6 +379,9 @@ if __name__ == "__main__":
 
     parser.add_argument("-fds", "--forcedatasize", help="specify number of data to use for each epoch (only for testing)",
                         default=-1, type=int)
+
+    parser.add_argument("-eonly","--evaluationOnly",action='store_true',
+                        help="use this flag when you only want to do evalution on a certain trained model" )
 
     args = parser.parse_args()
 
