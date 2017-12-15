@@ -68,9 +68,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     # this file is used to log the test set evaluation results
     testplotlog_filename = name_of_model+"_"+timestring+"_test.tsv"
     testplotlog_path = os.path.join(PLOTLOG_FOLDER,testplotlog_filename)
-    testplotlog_fpt = open(testplotlog_path,'w')
-    testplotlog_fpt.write(name_of_model+"\n")
-    testplotlog_fpt.write("testset\tnll_loss\tf1\tem\n")
+
 
     # the dataset is basically all the things about squad data
     # dataset is built by calling the SquadDataset class
@@ -164,6 +162,19 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     char_word2id = {}
     for i, ch in enumerate(char_vocab):
         char_word2id[ch] = i
+
+    # this part is about things we need for the any4, addsent and addonesent dataset
+    _f_test = h5py.File(testdataset.dataset_h5, 'r')
+    word_vocab_test = _f_test['words_flatten'][0].split('\n')
+    word_vocab_test = list(word_vocab_test)
+
+    char_vocab_test = _f_test['words_flatten_char'][0].split('\n')
+    char_vocab_test = list(char_vocab_test)
+    char_word2id_test = {}
+    for i, ch in enumerate(char_vocab_test):
+        char_word2id_test[ch] = i
+
+
 
     # the generator uses yield to give batches of data, similar to what taught in class
     train_batch_generator = random_generator(data_dict=train_data, batch_size=batch_size,
@@ -267,6 +278,11 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     with open(model_save_path, 'rb') as save_f:
         _model = torch.load(save_f)
 
+    # write evalution results to disk
+    testplotlog_fpt = open(testplotlog_path,'w')
+    testplotlog_fpt.write(name_of_model+"\n")
+    testplotlog_fpt.write("testset\tnll_loss\tf1\tem\n")
+
     # Run on test data.
     logger.info("loading best model and evaluate on original squad test (dev) sets------------------------------------------------------------------\n")
     test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data, criterion=criterion,
@@ -278,10 +294,15 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     testplotlog_fpt.write("OriginalSquad\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
     testplotlog_fpt.flush()
 
+
+    # here we should change the word_vocab etc so that the model knows it's going to do testing on other test sets!!!!!!
+    # otherwise the model gets errors
+
+
     logger.info("evaluate on add any 4 test set------------------------------------------------------------------\n")
     test_f1, test_em, test_nll_loss = evaluate(model=_model, data=add_any_4_testdata, criterion=criterion,
                                                trim_function=squad_trim, char_level_func=add_char_level_stuff,
-                                               word_id2word=word_vocab, char_word2id=char_word2id,
+                                               word_id2word=word_vocab_test, char_word2id=char_word2id_test,
                                                batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
     logger.info("------------------------------------------------------------------------------------\n")
     logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
@@ -290,7 +311,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     logger.info("evaluate on add one sent test set------------------------------------------------------------------\n")
     test_f1, test_em, test_nll_loss = evaluate(model=_model, data=add_one_sent_testdata, criterion=criterion,
                                                trim_function=squad_trim, char_level_func=add_char_level_stuff,
-                                               word_id2word=word_vocab, char_word2id=char_word2id,
+                                               word_id2word=word_vocab_test, char_word2id=char_word2id_test,
                                                batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
     logger.info("------------------------------------------------------------------------------------\n")
     logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
@@ -299,7 +320,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     logger.info("evaluate on add best sent test set------------------------------------------------------------------\n")
     test_f1, test_em, test_nll_loss = evaluate(model=_model, data=add_best_sent_testdata, criterion=criterion,
                                                trim_function=squad_trim, char_level_func=add_char_level_stuff,
-                                               word_id2word=word_vocab, char_word2id=char_word2id,
+                                               word_id2word=word_vocab_test, char_word2id=char_word2id_test,
                                                batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
     logger.info("------------------------------------------------------------------------------------\n")
     logger.info("nll loss=%.5f, f1=%.5f, em=%.5f" % (test_nll_loss, test_f1, test_em))
