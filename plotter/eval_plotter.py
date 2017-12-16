@@ -41,6 +41,19 @@ pp.pprint(losses)
 
 
 # I'm going to write a function here to convert data into latex TABLE code !!!!!!!!!!!!
+def toLatexTable(data,modelnames):
+    s = ""
+    s += "& Original & AddAny1 & AddOneSent & AddBestSent \\\\ \\hline\n"
+    for r in range(len(modelnames)):
+        s += modelnames[r]
+        for num in data[r]:
+            formated_num = "%0.2f" % num
+            s += " & "+formated_num
+        s+= "\\\\ \\hline\n"
+    print s
+    print ""
 
-
-
+# just call these functions and then copy paste into the latex file you use
+toLatexTable(losses,model_names)
+toLatexTable(f1s,model_names)
+toLatexTable(ems,model_names)
