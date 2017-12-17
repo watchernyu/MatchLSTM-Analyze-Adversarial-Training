@@ -13,7 +13,7 @@ from lib.models.match_lstm import MatchLSTMModel
 from lib.objectives.generic import StandardNLL
 from lib.utils.setup_logger import setup_logging, log_git_commit
 from helpers.generic import print_shape_info, print_data_samples, random_generator, squad_trim, add_char_level_stuff,\
-    torch_model_summarize, generator_queue, evaluate
+    torch_model_summarize, generator_queue, evaluate,evaluate_error_analysis
 
 # this is the main training file, call train.py to train the model
 
@@ -282,64 +282,118 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
     with open(model_save_path, 'rb') as save_f:
         _model = torch.load(save_f)
 
-    # write evalution results to disk
-    testplotlog_fpt = open(testplotlog_path,'w')
-    testplotlog_fpt.write(name_of_model+"\n")
-    testplotlog_fpt.write("testset\tnll_loss\tf1\tem\n")
+    if not args.doErrorAnalysis:
+        # write evalution results to disk
+        testplotlog_fpt = open(testplotlog_path,'w')
+        testplotlog_fpt.write(name_of_model+"\n")
+        testplotlog_fpt.write("testset\tnll_loss\tf1\tem\n")
 
-    ###################################################################################
-    testsetname = "Original"
-    test_data_to_use = test_data1
-    logger.info(testsetname+" now evaluting------------------------------")
-    test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data_to_use, criterion=criterion,
-                                               trim_function=squad_trim, char_level_func=add_char_level_stuff,
-                                               word_id2word=word_vocab, char_word2id=char_word2id,
-                                               batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
-    logger.info("nll loss=%.5f, f1=%.5f, em=%.5f\n" % (test_nll_loss, test_f1, test_em))
-    testplotlog_fpt.write(testsetname+"\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
-    testplotlog_fpt.flush()
-    ###################################################################################
+        ###################################################################################
+        testsetname = "Original"
+        test_data_to_use = test_data1
+        logger.info(testsetname+" now evaluting------------------------------")
+        test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data_to_use, criterion=criterion,
+                                                   trim_function=squad_trim, char_level_func=add_char_level_stuff,
+                                                   word_id2word=word_vocab, char_word2id=char_word2id,
+                                                   batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
+        logger.info("nll loss=%.5f, f1=%.5f, em=%.5f\n" % (test_nll_loss, test_f1, test_em))
+        testplotlog_fpt.write(testsetname+"\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
+        testplotlog_fpt.flush()
+        ###################################################################################
 
-    ###################################################################################
-    testsetname = "Any1"
-    test_data_to_use = test_data2
-    logger.info(testsetname+" now evaluting------------------------------")
-    test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data_to_use, criterion=criterion,
-                                               trim_function=squad_trim, char_level_func=add_char_level_stuff,
-                                               word_id2word=word_vocab, char_word2id=char_word2id,
-                                               batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
-    logger.info("nll loss=%.5f, f1=%.5f, em=%.5f\n" % (test_nll_loss, test_f1, test_em))
-    testplotlog_fpt.write(testsetname+"\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
-    testplotlog_fpt.flush()
-    ###################################################################################
+        ###################################################################################
+        testsetname = "Any1"
+        test_data_to_use = test_data2
+        logger.info(testsetname+" now evaluting------------------------------")
+        test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data_to_use, criterion=criterion,
+                                                   trim_function=squad_trim, char_level_func=add_char_level_stuff,
+                                                   word_id2word=word_vocab, char_word2id=char_word2id,
+                                                   batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
+        logger.info("nll loss=%.5f, f1=%.5f, em=%.5f\n" % (test_nll_loss, test_f1, test_em))
+        testplotlog_fpt.write(testsetname+"\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
+        testplotlog_fpt.flush()
+        ###################################################################################
 
-    ###################################################################################
-    testsetname = "AddOneSent"
-    test_data_to_use = test_data3
-    logger.info(testsetname+" now evaluting------------------------------")
-    test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data_to_use, criterion=criterion,
-                                               trim_function=squad_trim, char_level_func=add_char_level_stuff,
-                                               word_id2word=word_vocab, char_word2id=char_word2id,
-                                               batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
-    logger.info("nll loss=%.5f, f1=%.5f, em=%.5f\n" % (test_nll_loss, test_f1, test_em))
-    testplotlog_fpt.write(testsetname+"\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
-    testplotlog_fpt.flush()
-    ###################################################################################
+        ###################################################################################
+        testsetname = "AddOneSent"
+        test_data_to_use = test_data3
+        logger.info(testsetname+" now evaluting------------------------------")
+        test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data_to_use, criterion=criterion,
+                                                   trim_function=squad_trim, char_level_func=add_char_level_stuff,
+                                                   word_id2word=word_vocab, char_word2id=char_word2id,
+                                                   batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
+        logger.info("nll loss=%.5f, f1=%.5f, em=%.5f\n" % (test_nll_loss, test_f1, test_em))
+        testplotlog_fpt.write(testsetname+"\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
+        testplotlog_fpt.flush()
+        ###################################################################################
 
-    ###################################################################################
-    testsetname = "AddBestSent"
-    test_data_to_use = test_data4
-    logger.info(testsetname+" now evaluting------------------------------")
-    test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data_to_use, criterion=criterion,
-                                               trim_function=squad_trim, char_level_func=add_char_level_stuff,
-                                               word_id2word=word_vocab, char_word2id=char_word2id,
-                                               batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
-    logger.info("nll loss=%.5f, f1=%.5f, em=%.5f\n" % (test_nll_loss, test_f1, test_em))
-    testplotlog_fpt.write(testsetname+"\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
-    testplotlog_fpt.flush()
-    ###################################################################################
+        ###################################################################################
+        testsetname = "AddBestSent"
+        test_data_to_use = test_data4
+        logger.info(testsetname+" now evaluting------------------------------")
+        test_f1, test_em, test_nll_loss = evaluate(model=_model, data=test_data_to_use, criterion=criterion,
+                                                   trim_function=squad_trim, char_level_func=add_char_level_stuff,
+                                                   word_id2word=word_vocab, char_word2id=char_word2id,
+                                                   batch_size=valid_batch_size, enable_cuda=model_config['scheduling']['enable_cuda'])
+        logger.info("nll loss=%.5f, f1=%.5f, em=%.5f\n" % (test_nll_loss, test_f1, test_em))
+        testplotlog_fpt.write(testsetname+"\t"+str(test_nll_loss) + "\t" + str(test_f1) + "\t" + str(test_em) + "\n")
+        testplotlog_fpt.flush()
+        ###################################################################################
 
+    else: # if do error analysis
+        ###################################################################################
+        testsetname = "Original"
+        test_data_to_use = test_data1
+        test_f1, test_em, test_nll_loss = evaluate_error_analysis(model=_model, data=test_data_to_use,
+                                                                  criterion=criterion,
+                                                                  trim_function=squad_trim,
+                                                                  char_level_func=add_char_level_stuff,
+                                                                  word_id2word=word_vocab, char_word2id=char_word2id,
+                                                                  batch_size=valid_batch_size,
+                                                                  enable_cuda=model_config['scheduling']['enable_cuda'],
+                                                                  testsetName=testsetname,
+                                                                  modelname=name_of_model)
+        ###################################################################################
 
+        ###################################################################################
+        testsetname = "Any1"
+        test_data_to_use = test_data2
+        test_f1, test_em, test_nll_loss = evaluate_error_analysis(model=_model, data=test_data_to_use,
+                                                                  criterion=criterion,
+                                                                  trim_function=squad_trim,
+                                                                  char_level_func=add_char_level_stuff,
+                                                                  word_id2word=word_vocab, char_word2id=char_word2id,
+                                                                  batch_size=valid_batch_size,
+                                                                  enable_cuda=model_config['scheduling']['enable_cuda'],
+                                                                  testsetName=testsetname,
+                                                                  modelname=name_of_model)
+        ###################################################################################
+        ###################################################################################
+        testsetname = "AddOneSent"
+        test_data_to_use = test_data3
+        test_f1, test_em, test_nll_loss = evaluate_error_analysis(model=_model, data=test_data_to_use,
+                                                                  criterion=criterion,
+                                                                  trim_function=squad_trim,
+                                                                  char_level_func=add_char_level_stuff,
+                                                                  word_id2word=word_vocab, char_word2id=char_word2id,
+                                                                  batch_size=valid_batch_size,
+                                                                  enable_cuda=model_config['scheduling']['enable_cuda'],
+                                                                  testsetName=testsetname,
+                                                                  modelname=name_of_model)
+        ###################################################################################
+        ###################################################################################
+        testsetname = "AddBestSent"
+        test_data_to_use = test_data4
+        test_f1, test_em, test_nll_loss = evaluate_error_analysis(model=_model, data=test_data_to_use,
+                                                                  criterion=criterion,
+                                                                  trim_function=squad_trim,
+                                                                  char_level_func=add_char_level_stuff,
+                                                                  word_id2word=word_vocab, char_word2id=char_word2id,
+                                                                  batch_size=valid_batch_size,
+                                                                  enable_cuda=model_config['scheduling']['enable_cuda'],
+                                                                  testsetName=testsetname,
+                                                                  modelname=name_of_model)
+        ###################################################################################
 
     return
 
@@ -381,6 +435,9 @@ if __name__ == "__main__":
 
     parser.add_argument("-eonly","--evaluationOnly",action='store_true',
                         help="use this flag when you only want to do evalution on a certain trained model" )
+
+    parser.add_argument("-errana","--doErrorAnalysis",action='store_true',
+                        help="use this flag when you want to generate error analysis files and not generate evaluation test result files" )
 
     args = parser.parse_args()
 

@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import threading
 import time
+import os
 try:
     import queue
 except ImportError:
@@ -319,17 +320,33 @@ def evaluate(model, data, criterion, trim_function, char_level_func, word_id2wor
     return f1, exact_match, nll_loss
 # end method evaluate
 
-def evaluate_error_analysis(model, data, criterion, trim_function, char_level_func, word_id2word, char_word2id, batch_size=32, enable_cuda=False):
+def writeArrayToFile(array,fpt):
+    for s in array:
+        fpt.write(s)
+    fpt.flush()
+    return
+
+def evaluate_error_analysis(model, data, criterion, trim_function, char_level_func, word_id2word, char_word2id,
+                            batch_size=32, enable_cuda=False, errorLogFolderPath="error_analysis",testsetName="unknown",modelname="unnamed_model"):
     # different from evaluate(), this function will print out some error analysis
     # for just evalution, use the evaluate() function instead.
+    # give this function a filename to write down the errors
     model.eval() # enter evalution mode
     data_size = data['input_story'].shape[0]
     total_nll_loss = 0.0
     number_batch = (data_size + batch_size - 1) // batch_size
     exact_match, f1 = 0.0, 0.0
 
-    for i in range(number_batch):
+    smallErrorFilename = modelname+"Model_"+testsetName+"_smallError.txt"
+    bigErrorFilename = modelname+"Model_"+testsetName+"_bigError.txt"
+    sepath = os.path.join(errorLogFolderPath,smallErrorFilename) #file path
+    bepath = os.path.join(errorLogFolderPath,bigErrorFilename)
+    sefpt = open(sepath,"w") #file pointer
+    befpt = open(bepath,"w")
+    seLines = []
+    beLines = []
 
+    for i in range(number_batch):
         # the batch_dict contains the
         batch_dict = {'input_story': data['input_story'][i * batch_size: (i + 1) * batch_size],
                       'input_question': data['input_question'][i * batch_size: (i + 1) * batch_size],
@@ -339,6 +356,7 @@ def evaluate_error_analysis(model, data, criterion, trim_function, char_level_fu
         gold_standard_answer = data['input_answer'][i * batch_size: (i + 1) * batch_size]
 
         input_story = batch_dict['input_story']
+        input_question = batch_dict['input_question']
         # to_pt just convert np_arrays to Variables
         preds = model.forward(to_pt(input_story, enable_cuda),
                               to_pt(batch_dict['input_question'], enable_cuda),
@@ -349,32 +367,48 @@ def evaluate_error_analysis(model, data, criterion, trim_function, char_level_fu
         loss = torch.sum(loss).cpu().data.numpy()
         preds = torch.max(preds, 1)[1].cpu().data.numpy().squeeze()  # batch x 2
 
-        for s, p, g in zip(input_story, preds, gold_standard_answer):
+        for s, q, p, g in zip(input_story,input_question ,preds, gold_standard_answer):
             p = htpos2chunks(p, s)
             p = to_str(p, word_id2word)[0]  # one string
             g = to_str(g, word_id2word)  # a list of strings
-            print "\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            print "Prediction:"+p # p is the prediction. The p here is a string (for example, "britain")
-
-            print "Answers: "+str(g) # g here is a list of strings (a list of GT answers) for example, ['queen elizabeth',
-            # 'queen elizabeth', 'queen elizabeth', 'queen elizabeth', 'queen elizabeth']
 
             this_exact_score = metric_max_over_ground_truths(
                 exact_match_score, p, g)
             this_f1_score = metric_max_over_ground_truths(
                 f1_score, p, g)
-            print "Exact match score: "+str(this_exact_score)
-            print "F1 score:"+str(this_f1_score)
-            print ""
 
-            exact_match += metric_max_over_ground_truths(
-                exact_match_score, p, g)
+            exact_match += this_exact_score
+            f1 += this_f1_score
 
+            if this_f1_score<0.99:
+                story_string = to_str(s, word_id2word)[0]
+                pred_string = "Prediction: " + p
+                q = to_str(q, word_id2word)
+                question_string = "Question: " + q[0]
+                answer_string = "Answers: " + str(g)
+                f1_string = "F1: %.2f" % this_f1_score
+                errorEntry = story_string + "\n" + question_string + "\n" + pred_string + "\n" + answer_string + "\n" + f1_string + "\n"
 
-            f1 += metric_max_over_ground_truths(
-                f1_score, p, g)
+            if this_f1_score<0.5:
+                beLines.append(errorEntry)
+            if this_f1_score>=0.5 and this_f1_score<0.99:
+                seLines.append(errorEntry)
+
+            # print "\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            # print to_str(s,word_id2word)[0]
+            # print "Prediction:"+p # p is the prediction. The p here is a string (for example, "britain")
+            # print "Answers: "+str(g) # g here is a list of strings (a list of GT answers) for example, ['queen elizabeth',
+            # # 'queen elizabeth', 'queen elizabeth', 'queen elizabeth', 'queen elizabeth']
+            # print "Exact match score: "+str(this_exact_score)
+            # print "F1 score:"+str(this_f1_score)
+            # print ""
 
         total_nll_loss = total_nll_loss + loss
+    # print "###################################################"
+    # print seLines
+    # print beLines
+    writeArrayToFile(seLines,sefpt)
+    writeArrayToFile(beLines,befpt)
 
     f1 = float(f1) / float(data_size)
     exact_match = float(exact_match) / float(data_size)
