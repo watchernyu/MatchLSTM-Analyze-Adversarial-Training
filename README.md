@@ -5,6 +5,10 @@ For the original MatchLSTM project, check out https://github.com/xingdi-eric-yua
 
 In this project we explore how adversarially-modified training data might be used to train machine reading comprehension models to bocome more robust.
 
+## Environment
+This project uses python 2.7 and pytorch 0.2
+Other library dependency are in requirements.txt
+
 ## Generating Adversarial Examples (Random words)
 
 The adversarial data can be generated using the generator in adv_gen folder, the new data are generated on top of SQuAD dataset original data sets, you can specify the paths, what data to generate with and how many random sequence to put into the data. You can also change the parameter in the program to indicate how long a sequence, how many common words/question words should be used in each random sequence.
