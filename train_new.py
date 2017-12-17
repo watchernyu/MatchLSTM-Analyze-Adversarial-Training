@@ -353,7 +353,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
                                                                   batch_size=valid_batch_size,
                                                                   enable_cuda=model_config['scheduling']['enable_cuda'],
                                                                   testsetName=testsetname,
-                                                                  modelname=name_of_model)
+                                                                  modelname=name_of_model,num_error_limit=500)
         ###################################################################################
 
         ###################################################################################
@@ -368,7 +368,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
                                                                   batch_size=valid_batch_size,
                                                                   enable_cuda=model_config['scheduling']['enable_cuda'],
                                                                   testsetName=testsetname,
-                                                                  modelname=name_of_model)
+                                                                  modelname=name_of_model,num_error_limit=500)
         ###################################################################################
         ###################################################################################
         testsetname = "AddOneSent"
@@ -382,7 +382,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
                                                                   batch_size=valid_batch_size,
                                                                   enable_cuda=model_config['scheduling']['enable_cuda'],
                                                                   testsetName=testsetname,
-                                                                  modelname=name_of_model)
+                                                                  modelname=name_of_model,num_error_limit=500)
         ###################################################################################
         ###################################################################################
         testsetname = "AddBestSent"
@@ -396,9 +396,9 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
                                                                   batch_size=valid_batch_size,
                                                                   enable_cuda=model_config['scheduling']['enable_cuda'],
                                                                   testsetName=testsetname,
-                                                                  modelname=name_of_model)
+                                                                  modelname=name_of_model,num_error_limit=500)
         ###################################################################################
-        
+
     return
 
 

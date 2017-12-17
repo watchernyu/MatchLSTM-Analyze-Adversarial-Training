@@ -327,10 +327,11 @@ def writeArrayToFile(array,fpt):
     return
 
 def evaluate_error_analysis(model, data, criterion, trim_function, char_level_func, word_id2word, char_word2id,
-                            batch_size=32, enable_cuda=False, errorLogFolderPath="error_analysis",testsetName="unknown",modelname="unnamed_model"):
+                            batch_size=32, enable_cuda=False, errorLogFolderPath="error_analysis",testsetName="unknown",modelname="unnamed_model",num_error_limit=500):
     # different from evaluate(), this function will print out some error analysis
     # for just evalution, use the evaluate() function instead.
     # give this function a filename to write down the errors
+    # when collected "<number_error_limit> errors, the function will stop early.
     model.eval() # enter evalution mode
     data_size = data['input_story'].shape[0]
     total_nll_loss = 0.0
@@ -345,8 +346,10 @@ def evaluate_error_analysis(model, data, criterion, trim_function, char_level_fu
     befpt = open(bepath,"w")
     seLines = []
     beLines = []
-
+    collected_enough_errors = False
     for i in range(number_batch):
+        if collected_enough_errors:
+            break
         # the batch_dict contains the
         batch_dict = {'input_story': data['input_story'][i * batch_size: (i + 1) * batch_size],
                       'input_question': data['input_question'][i * batch_size: (i + 1) * batch_size],
@@ -366,6 +369,7 @@ def evaluate_error_analysis(model, data, criterion, trim_function, char_level_fu
         loss = criterion(preds, to_pt(batch_dict['answer_ranges'], enable_cuda))
         loss = torch.sum(loss).cpu().data.numpy()
         preds = torch.max(preds, 1)[1].cpu().data.numpy().squeeze()  # batch x 2
+
 
         for s, q, p, g in zip(input_story,input_question ,preds, gold_standard_answer):
             p = htpos2chunks(p, s)
@@ -393,6 +397,8 @@ def evaluate_error_analysis(model, data, criterion, trim_function, char_level_fu
                 beLines.append(errorEntry)
             if this_f1_score>=0.5 and this_f1_score<0.99:
                 seLines.append(errorEntry)
+            if (len(seLines)+len(beLines))>num_error_limit:
+                collected_enough_errors = True
 
             # print "\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
             # print to_str(s,word_id2word)[0]
