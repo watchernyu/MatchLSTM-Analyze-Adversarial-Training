@@ -340,6 +340,6 @@ def generate_adv_train_and_valid(original_data_folder_path,new_folder_path,inser
 # this is used to generate one of the test sets
 # we need to use a different function (generate_adversarial_test_data) to deal with multiple answers
 generate_adversarial_test_data(original_data_folder_path, test_story_filename, test_question_filename,
-                              "../test_data",test_answer_filename,"ANYPLACE", 4)
+                              "../new_test_data",test_answer_filename,"ANYPLACE", 1)
 
 

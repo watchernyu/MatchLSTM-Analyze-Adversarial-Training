@@ -6,14 +6,15 @@ from plotter_helpers import *
 
 pp = pprint.PrettyPrinter()
 
-filenames = ['eval1.tsv','eval2.tsv']
+# specify folder name and file names here for plotting
+plot_folder_name = "../final_results_from_hpc/final/testing"
+filenames = ['oritest.tsv','endtest.tsv','fronttest.tsv','any1test.tsv','any2test.tsv','any3test.tsv']
 n_model = len(filenames)
 
 losses = get_array(n_model,4)
 f1s = get_array(n_model,4)
 ems = get_array(n_model,4)
 model_names = []
-plot_folder_name = "data_for_plot_trials"
 
 def read_testplot_file(filepath, modelIndex):
     fpt = open(filepath, "r")
@@ -54,6 +55,11 @@ def toLatexTable(data,modelnames):
     print ""
 
 # just call these functions and then copy paste into the latex file you use
+print "losses"
 toLatexTable(losses,model_names)
+print "F1"
+
 toLatexTable(f1s,model_names)
+print "Em"
+
 toLatexTable(ems,model_names)

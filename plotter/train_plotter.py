@@ -6,15 +6,17 @@ import pprint
 import matplotlib.pyplot as plt
 from plotter_helpers import *
 
-plot_folder_name = "data_for_plot_trials"
+plot_folder_name = "../final_results_from_hpc/final/training"
+filenames = ['oritrain.tsv','endtrain.tsv','fronttrain.tsv','any1train.tsv','any2train.tsv','any3train.tsv']
+colors = ['g','y','r','c','b','#000000']
+
 SAVETOFILE = False # set this to true when want to save to file
 # set this to false when want to just view
 save_name = "training_figure"
-N_EPOCH = 12 # max number of epoch for plotting
+N_EPOCH = 24 # max number of epoch for plotting
 
 pp = pprint.PrettyPrinter()
 
-filenames = ["original_1210235153_plot.tsv","any_1_1210235209_plot.tsv","any_2_1210235209_plot.tsv","any_3_1210235210_plot.tsv"]
 
 plotdata = []
 losses = []
@@ -59,7 +61,7 @@ print losses[0]
 
 ##############validation losses
 for i in range(len(losses)):
-    plt.plot(epoches, losses[i][:N_EPOCH])
+    plt.plot(epoches, losses[i][:N_EPOCH],colors[i])
 
 plt.legend(model_names)
 
@@ -73,7 +75,7 @@ else:
 
 ##############f1
 for i in range(len(losses)):
-    plt.plot(epoches, f1s[i][:N_EPOCH])
+    plt.plot(epoches, f1s[i][:N_EPOCH],colors[i])
 
 plt.legend(model_names)
 
@@ -86,9 +88,9 @@ else:
     plt.show()
 
 
-##############f1
+##############em
 for i in range(len(losses)):
-    plt.plot(epoches, ems[i][:N_EPOCH])
+    plt.plot(epoches, ems[i][:N_EPOCH],colors[i])
 
 plt.legend(model_names)
 
