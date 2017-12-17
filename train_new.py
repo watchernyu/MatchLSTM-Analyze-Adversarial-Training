@@ -344,6 +344,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
         ###################################################################################
         testsetname = "Original"
         test_data_to_use = test_data1
+        logger.info(testsetname + " now logging model error ------------------------------")
         test_f1, test_em, test_nll_loss = evaluate_error_analysis(model=_model, data=test_data_to_use,
                                                                   criterion=criterion,
                                                                   trim_function=squad_trim,
@@ -358,6 +359,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
         ###################################################################################
         testsetname = "Any1"
         test_data_to_use = test_data2
+        logger.info(testsetname + " now logging model error ------------------------------")
         test_f1, test_em, test_nll_loss = evaluate_error_analysis(model=_model, data=test_data_to_use,
                                                                   criterion=criterion,
                                                                   trim_function=squad_trim,
@@ -371,6 +373,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
         ###################################################################################
         testsetname = "AddOneSent"
         test_data_to_use = test_data3
+        logger.info(testsetname + " now logging model error ------------------------------")
         test_f1, test_em, test_nll_loss = evaluate_error_analysis(model=_model, data=test_data_to_use,
                                                                   criterion=criterion,
                                                                   trim_function=squad_trim,
@@ -384,6 +387,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
         ###################################################################################
         testsetname = "AddBestSent"
         test_data_to_use = test_data4
+        logger.info(testsetname + " now logging model error ------------------------------")
         test_f1, test_em, test_nll_loss = evaluate_error_analysis(model=_model, data=test_data_to_use,
                                                                   criterion=criterion,
                                                                   trim_function=squad_trim,
@@ -394,7 +398,7 @@ def the_main_function(name_of_model,config_dir='config', update_dict=None,data_f
                                                                   testsetName=testsetname,
                                                                   modelname=name_of_model)
         ###################################################################################
-
+        
     return
 
 
